@@ -29,3 +29,13 @@ jobs:
         registry: ${{ env.awsaccountid }}.dkr.ecr.${{ env.awsregion }}.amazonaws.com
         username: ${{ secrets.AWS_ACCESS_KEY_ID }}
         password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    - name: Create Amazon ECR Repository
+      shell: pwsh
+      continue-on-error: true
+      run: |
+        New-ECRRepository -RepositoryName ${{ env.ecscluster }}
+    - name: Build and Push Docker Image
+      uses: docker/build-push-action@v2
+      with:
+        push: true
+        tags: ${{ env.awsaccountid }}.dkr.ecr.${{ env.awsregion }}.amazonaws.com/${{ env.ecscluster }}:latest
