@@ -6,6 +6,7 @@ env:
   ecscluster: fargatewebapp
   awsaccountid: 987868780346
   awsregion: us-west-2
+  awsvpcsubnet: subnet-026be610a6ebc09c6
 
 jobs:
   fargate:
@@ -34,8 +35,18 @@ jobs:
       continue-on-error: true
       run: |
         New-ECRRepository -RepositoryName ${{ env.ecscluster }}
+    - name: Create Amazon ECS Cluster
+      shell: pwsh
+      continue-on-error: true
+      run: |
+        New-ECSCluster -ClusterName ${{ env.ecscluster }}
     - name: Build and Push Docker Image
       uses: docker/build-push-action@v2
       with:
         push: true
         tags: ${{ env.awsaccountid }}.dkr.ecr.${{ env.awsregion }}.amazonaws.com/${{ env.ecscluster }}:latest
+    - name: Run Amazon ECS Fargate Task
+      shell: pwsh
+      run: |
+        New-ECSTask -Cluster ${{ env.ecscluster }} -AwsvpcConfiguration_AssignPublicIp ENABLED `
+          -AwsvpcConfiguration_Subnet ${{ env.awsvpcsubnet }} -TaskDefinition trevorwebapp -LaunchType FARGATE
