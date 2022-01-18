@@ -1,0 +1,31 @@
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  ecscluster: fargatewebapp
+  awsaccountid: 987868780346
+  awsregion: us-west-2
+
+jobs:
+  fargate:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Cloning Project Source Code
+      uses: actions/checkout@v2
+    - name: Installing PowerShell Modules for AWS
+      shell: pwsh
+      run: |
+        Install-Module -Name AWS.Tools.ECS, AWS.Tools.ECR -Force
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.awsregion }}
+    - name: Login to ECR
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ env.awsaccountid }}.dkr.ecr.${{ env.awsregion }}.amazonaws.com
+        username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
